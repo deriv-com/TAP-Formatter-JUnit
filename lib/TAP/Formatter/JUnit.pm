@@ -57,13 +57,25 @@ sub open_test {
 ###############################################################################
 # Subroutine:   summary()
 ###############################################################################
-# Prints the summary report (in JUnit) after all tests are run.
+# Prints the summary report after all tests are run.
 sub summary {
     my $self = shift;
     return if $self->silent();
 
-    my @suites = @{$self->testsuites};
-    print { $self->stdout } $self->xml->testsuites( @suites );
+    if ($ENV{PERL_TEST_HARNESS_DUMP_TAP}) {
+        my $iter = path($ENV{PERL_TEST_HARNESS_DUMP_TAP})->iterator({recurse => 1});
+        while (my $f = $iter->()) {
+            next if $f->is_dir;
+            next unless $f->basename =~ /\.t$/;
+            print {$self->stdout} "-" x 80, "\n";
+            print {$self->stdout} "$f\n";
+            print {$self->stdout} $f->slurp_utf8;
+        }
+
+    } else {
+        my @suites = @{$self->testsuites};
+        print {$self->stdout} $self->xml->testsuites(@suites);
+    }
 }
 
 1;
